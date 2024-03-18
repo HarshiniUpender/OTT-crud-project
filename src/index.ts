@@ -1,29 +1,39 @@
 import { MongoClient } from 'mongodb';
 const express = require('express');
 const bodyParser = require('body-parser');
+import { createServer } from 'http';
 
-
-async function main(){
+export async function main(){
     try{
         const app = express();
         app.use(bodyParser.json());
 
-        const mongoUrl = 'mongodb+srv://harshiniupender:harshiniupender@cluster0.juqm2pd.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0';
-        const mongo = await MongoClient.connect(mongoUrl);
-        await mongo.connect();
-        app.db = mongo.db();
+        const mongoUrl = 'mongodb+srv://harshiniupender:harshiniupender@cluster0.juqm2pd.mongodb.net/';
+        const mongoClient = new MongoClient(mongoUrl);
+        await mongoClient.connect();
+        const db = mongoClient.db();
 
+        app.db = db;
         //Route
         app.use('/movies', require('./routes/movieRoutes'));
 
-        //Server
-        app.listen(3000, () => {
-            console.log('Server is running on http://localhost:3000/')
-        });
+        return app;
     } catch(error){
         console.log(error);
         
     }
 }
 
-main();
+export async function startServer() {
+    const { app } = await main();
+    const server = createServer(app);
+    const port = 3000;
+    server.listen(port, () => {
+        console.log(`Server is running on http://localhost:${port}/`);
+    });
+    return server;
+}
+
+if (require.main === module) {
+    startServer();
+}
